@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+    <title>Qualtrix Anonymizer</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Input CSV</h3>
+                <form>
+                    <div class="form-group">
+                        <label for="pre-input">Pre (CSV)</label>
+                        <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="post-input">Post (CSV)</label>
+                        <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button data-bind="click: parseInputs" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <h3>Choose Field Categories</h3>
+                <form class="form-horizontal">
+                    <!-- ko foreach: fields -->
+                    <div class="form-group">
+                      <label data-bind="text: fieldLabel" class="col-sm-2 control-label"></label>
+                      <div class="col-md-3">
+                        <select data-bind="value: fieldCategory, options: $parent.fieldCategories" class="form-control"></select>
+                      </div>
+                    </div>                    
+                    <!-- /ko -->
+                    <div class="form-group">
+                        <button data-bind="click: selectFields" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
+    <script src="js/jquery.csv-0.71.min.js"></script>
+    <script type="text/javascript">
+        function ViewModel() {
+            var $this = this;
+
+            $this.preInput = ko.observable();
+            $this.postInput = ko.observable();
+            $this.fields = ko.observableArray();
+            $this.fieldCategories = ["Response", "Ignore", "Identifier"];
+            
+            $this.parseInputs = function() {
+                var preDataArray = $.csv.toArrays($this.preInput());
+                var postDataArray = $.csv.toArrays($this.postInput());
+
+                var preFieldNames = preDataArray.shift();
+                var preFieldLabels = preDataArray.shift();
+
+                var postFieldNames = postDataArray.shift();
+                var postFieldLabels = postDataArray.shift();
+
+                var fieldModels = [];
+
+                for (var i = preFieldNames.length - 1; i >= 0; i--) {
+                    var fieldViewModel = {
+                        fieldIndex: i,
+                        fieldName: preFieldNames[i],
+                        fieldLabel: preFieldLabels[i],
+                        fieldCategory: ko.observable()
+                    };
+
+                    fieldModels.push(fieldViewModel);
+                };
+
+                fieldModels.reverse();
+
+                $this.fields(fieldModels);
+                
+                $this.preResponses = preDataArray;
+                $this.postResponses = postDataArray;
+
+                return false;
+            };
+
+            $this.selectFields = function() {
+                var idIndices = $this.fields()
+                    .filter(function (f) { return f.fieldCategory() === "Identifier"; })
+                    .map(function(f) { return f.fieldIndex; });
+                    
+                var preIds = $this.preResponses.map(function(r) { return idIndices.map(function(ix){ return [r[ix]];});});
+                var postIds = $this.postResponses.map(function(r) { return idIndices.map(function(ix){ return [r[ix]];});});
+            };
+        }
+
+        $(function(){
+            var viewModel = new ViewModel();
+
+            ko.applyBindings(viewModel);
+        });
+        
+        function selectIndices(array, indices) {
+            var value = "";
+            
+            for (var index = 0; index < indices.length; index++) {
+                value = value + "; " + array[indices[index]];
+            }
+            
+            return value;       
+        }
+    </script>
+</body>
+
+</html>
