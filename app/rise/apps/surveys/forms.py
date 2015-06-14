@@ -9,5 +9,5 @@ class SurveyForm(forms.ModelForm):
 
     class Meta:
         model = Survey
-        exclude = ['user']
+        exclude = ['user', 'slug', 'pre_task_id', 'post_task_id']
 

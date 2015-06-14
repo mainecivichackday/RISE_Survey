@@ -17,6 +17,10 @@ urlpatterns = patterns(
         view=SurveyUploadView.as_view(),
         name="survey-upload"),
 
+    url(r'^surveys/(?P<slug>[-\w\d]+)/report/',
+        view=SurveyReportView.as_view(),
+        name="survey-report"),
+
     url(r'^surveys/(?P<slug>[-\w\d]+)/',
         view=SurveyDetailView.as_view(),
         name="survey-detail"),

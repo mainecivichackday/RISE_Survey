@@ -5,6 +5,7 @@ from django.views.generic import DetailView, ListView, View, TemplateView
 from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.template.loader import render_to_string
+from celery.result import AsyncResult
 
 from .models import Teacher, Survey, FieldResponse
 from .forms import SurveyForm
@@ -43,14 +44,34 @@ class SurveyDetailView(views.LoginRequiredMixin,  DetailView):
         context = super(SurveyDetailView, self).get_context_data(*args, **kwargs)
         # We want the responses from the survey loaded in a dict on a per-row basis
         context['field_responses'] = {}
-        response_ids = FieldResponse.objects.filter(survey_field__survey=self.object,
+        context['response_ids'] = FieldResponse.objects.filter(survey_field__survey=self.object,
                                                     survey_field__text="ResponseID")
-        print response_ids
-        for resp in response_ids:
-            fields = FieldResponse.objects.filter(survey_field__survey=self.object, respone_id=resp.respone_id)
-            context['field_responses'][resp.respone_id] = resp.response
+
+        if self.object.pre_task_id:
+            context['pre_task'] = AsyncResult(self.object.pre_task_id).state
+        if self.object.post_task_id:
+            context['post_task'] = AsyncResult(self.object.post_task_id).state
+        return context
+
+
+class SurveyReportView(views.LoginRequiredMixin,  DetailView):
+    model = Survey
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(SurveyReportView, self).get_context_data(*args, **kwargs)
+        # Here we want to produce some basic report data
+        context['questions'] = self.object.answers
+        context['field_responses'] = {}
+        context['response_ids'] = FieldResponse.objects.filter(survey_field__survey=self.object,
+                                                               survey_field__text="ResponseID")
+
+        context['results'] = {'Q1': "70%", 'Q2': '65%'}
+        context['common_correct'] = ['Q1', 'Q8']
+        context['common_wrong'] = ['Q2']
+        context['report'] = True
 
         return context
+
 
 class SurveyListView(views.LoginRequiredMixin,  ListView):
     model = Survey
@@ -67,19 +88,7 @@ class SurveyUploadView(views.LoginRequiredMixin,  CreateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(SurveyUploadView, self).get_context_data(*args, **kwargs)
-        meditation = None
-
-        try:
-            meditation = Teacher.objects.get(slug=self.request.GET.get('meditation'))
-        except:
-            pass
-
-        context['meditation'] = meditation
         return context
-
-
-    def get_success_url(self):
-        return reverse('homepage', args=()) + '#about'
 
     def form_valid(self, form):
         form = form.save(commit=False)

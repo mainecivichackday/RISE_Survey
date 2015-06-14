@@ -3,6 +3,7 @@
 {% load url from future %}
 {% load i18n %}
 {% load bootstrap %}
+{% load staticfiles %}
 
 {% block head_title %}{% trans "Response to" %}{{object.meditation}}{% endblock %}
 
@@ -18,21 +19,23 @@ $(document).ready(function(){
 <div class="login-panel col-lg-12 col-lg-offset-0">
     <h1>{{object}}</h1>
     
+    {% if report %}
+        <h3>Report</h3>
+        {{response_ids}}
+
+    {% else %}
     <div class="box">
         <h3>Results</h3>
-        <table id="surveyTable" style="color:black; overflow:auto; width:600px;">
-          <tr>
-            {% for field in survey.surveyfield_set.all.reverse %}<th>{{field|truncatechars:"20"}}</th>{% endfor %}
-          </tr>
-          <tr>
-            {% for field in field_responses %}<td>{{field}}</td>{% endfor %}
-          </tr>
-        </table>
+        <p>Entries: {{response_ids|length}}</p>
+        {% if pre_task == "PENDING" or post_task == "PENDING" %}<p>Still loading entries. Please refresh the page in a few minutes.</p>{% endif %}
+        <a href="{% url 'survey-report' object.slug %}" class="btn btn-info">View Report</a>
+
     </div>
     <br />
     <div class="box">
       <a href="" class="btn btn-success">Download CSV</a>
     </div>
+    {% endif %}
 </div>
 
 {% endblock %}

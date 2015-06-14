@@ -1,32 +1,26 @@
 {% extends "base.html" %}
+{% load staticfiles %}
 
 {% block body %}
 
-    <header class="intro">
-        <div class="intro-body">
+    <section id="{% block section_id %}{% endblock %}" class="">
+        <div class="login-container">
             <div class="container">
                 <div class="row">
-                    <div class="col-md-8 col-md-offset-2">
-                      <h2>Welcome to Outline</h2>
-                    </div>
-                </div>
+	                <h3>Welcome to RISE Survey Reporting</h3>
 
-            <div class="container">
-                <div class="row">
-	                <h3>A blurb can go here.</h3>
-                    <p>To get going, you're going to need to login or <a href="/accounts/register/">create an account</a></p>
-	                <p>Once you've exhausted the fun in this document, you should check out:</p>
-	                <div class="row">
-	                	<div class="large-4 medium-4 columns">
-	    		        <p><a href="http://foundation.zurb.com/docs">Foundation Documentation</a><br />Everything you need to know about using the framework.</p>
-	    	</        div>
-	                	<div class="large-4 medium-4 columns">
-	                		<p><a href="http://github.com/zurb/foundation">Foundation on Github</a><br />Latest code, issue reports, feature requests and more.</p>
-	                	</div>
-	                	<div class="large-4 medium-4 columns">
-	                		<p><a href="http://twitter.com/foundationzurb">@foundationzurb</a><br />Ping us on Twitter if you have questions. If you build something with this we'd love to see it (and send you a totally boss sticker).</p>
-	                	</div>        
-					        </div>
+                  {% if not user.is_authenticated %}
+                    <p>To get going, you're going to need to login or <a href="/accounts/signup/">create an account</a></p>
+                    {% else %}
+                    <p>To get started, checkout your <a href="{% url 'survey-list' %}">surveys</a>, or <a href="{% url 'survey-upload' %}">create a new survey</a> and start reporting!</p>
+                    {% endif %}
+                    <hr/>
+                   <p>The Maine Center for Research in STEM Education
+(RiSE Center) provides an integrated approach to University-based research and professional development in science and mathematics education. The Center is a joint effort of the College of Liberal Arts and Sciences, College of Education and Human Development and College of Natural Sciences, Forestry and Agriculture.  The activities of the Center bring together faculty from the science and mathematics disciplines with faculty from education.  With this combination of resources, the Center is reevaluating and reforming introductory level science and mathematics  courses, establishing new practices for K-12 science teacher preparation, and building infrastructure with teachers, schools, and administrators through out the state.</p>
+
+<p>Activities undertaken by the Center are targeted to create attractive, content-rich teacher preparation and continuing education options for mathematics and science teachers. The Center is working to develop well-qualified science and mathematics teachers for grades K-12 and to spearhead the development of coherent, developmentally appropriate curricula for mathematics and science.</p>
+
+<p><a href="http://umaine.edu/center/">Learn more about RISE</a></p>
       	</div>
       </div>
     </div>
