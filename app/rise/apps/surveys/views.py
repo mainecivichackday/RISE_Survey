@@ -85,6 +85,8 @@ class SurveyUploadView(views.LoginRequiredMixin,  CreateView):
     model = Survey
     form_class = SurveyForm
 
+    def get_success_url(self):
+        return reverse('survey-list')
 
     def get_context_data(self, *args, **kwargs):
         context = super(SurveyUploadView, self).get_context_data(*args, **kwargs)
