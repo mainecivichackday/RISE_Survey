@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% block meta %}
+    {% endblock meta %}
+
+    {% block base_title %}
+    <title>{% block title %}RISE Survey Reports{% endblock title %}</title>
+    {% endblock base_title %}
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{% static "css/grayscale.css" %}" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">``
+    <link href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+    <link href="//fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body id="page-top" data-spy="scroll" data-target=".navbar-fixed-top">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-custom navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-main-collapse">
+                    <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand page-scroll" href="/">
+                    <i class="fa fa-location-arrow" style="font-size:32pt"></i>  <span class="light">RISE</span> Survey Reports
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            {% block menu %}
+            <div class="collapse navbar-collapse navbar-right navbar-main-collapse">
+                <ul class="nav navbar-nav">
+                    <!-- Hidden li included to remove active class from about link when scrolled up past about section -->
+                    <li class="hidden">
+                        <a href="#page-top"></a>
+                    </li>
+                    {% if user.is_authenticated %}
+                    <li>
+                    <a class="page-scroll" href="{% url 'homepage' %}">Dashboard</a>
+                    </li>
+                    {% else %}
+                    <li>
+                    <a class="" href="{% url 'account_signup' %}">Sign up</a>
+                    </li>
+                    <li>
+                    <a class="page-scroll" href="{% url 'account_login' %}">Log in</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endblock %}
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    {% block body %}
+    {% comment %}
+    <!-- Intro Header -->
+    <header class="intro">
+        <div class="intro-body">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <h1 class="">Todays Meditation:</h1>
+                        <p class="intro-text">{{todays_meditation.text}}</p>
+                        <a href="#about" class="btn btn-circle page-scroll">
+                            <i class="fa fa-angle-double-down animated"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- About Section -->
+    <section id="about" class="container content-section text-center">
+        {% if not responded %}
+        <form method="POST" action="{ url 'response-create' %}">{% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Initial Response</h2>
+                <p>What emotions would you first feel? It's okay if this is not how you'd like to respond. The point is to be honest with yourself.</p>
+                <p><input width="20" name="initial_response" type="text" />
+            </div>
+            <div class="col-lg-8 col-lg-offset-2">
+                <p class="justify">Work through the best way to respond, adhering a close as possible to the stoic principals of detachment from what you cannot change, and changing what you can.</p>
+                <p><textarea name="notes" cols="50" rows="10"></textarea></p>
+                {% if not user.is_authenticated %}
+                <p>Save your responses by <a href="{% url 'account_signup' %}">creating an account</a> or <a href="{% url 'account_login' %}">logging in</a> with your Github or Google profiles.</p>
+                {% else %}
+                <p><input class="btn btn-success" type="submit" value="Save" />
+                {% endif %}
+            </div>
+        </div>
+        <input type="hidden" name="meditation" value="{{todays_meditation.id}}" />
+        </form>
+        {% else %}
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Thank you!</h2>
+                <p>You have already responded to today's meditation. If you would like to add a second response, please review your <a href="{ url 'meditation-list' %}">dashboard</a>.</p>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- How Section -->
+    <section id="how" class="text-center">
+        <div class="download-section">
+            <div class="container">
+                <div class="col-lg-8 col-lg-offset-2">
+                    <h2>How Planning for Adversity Works</h2>
+                    <p>Adversity comes in many shapes and sizes. Some adversity, like major injury or death, can be catastrophic to our personal happiness. Other forms come in smaller, less significant forms. But we still must be prepared to choose our response wisely and compassionately.</p>
+                </div>
+                <div class="week col-md-4 col-lg-offset-2">
+                    <h3><span class="circle">1</span> Accept</h3>
+                    <p>We must accept a majority of events will be <b>beyond</b> our control.</p>
+                    <p>Here we provide scenarios that simulate adversity that could possibly confront us.</p>
+                </div>
+                <div class="week col-md-4">
+                    <h3><span class="circle">2</span> Respond</h3>
+                    <p>We must control our <b>response</b> to the events of our lives.</p>
+                    <p>Read through the scenario provide each day, and choose how you would likely respond, and how you <b>should</b> respond.</p>
+                </div>
+                <div class="col-lg-8 col-lg-offset-2">
+                    <hr />
+                    <br />
+                    <h3><span class="circle">3</span> Plan for Adversity</h3>
+                    <p>Finally, planning for adversity means running through all the positive, actionable steps you can take to resolve, mitigate or control a situation.</p>
+                    <p>Once you've controlled your response, you must decide how you will respond. The goal is to respond in a constructive and positive manner, while avoiding unhelpful, negative emotional responses.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="container content-section text-center">
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Contact Plan for Adversity</h2>
+                <p>Feel free to email us with any questions or feedback you may have.</p>
+                <p><a href="mailto:info@planadvserity.com">info@planadversity.com</a>
+                </p>
+                <ul class="list-inline banner-social-buttons">
+                    <li>
+                        <a href="//twitter.com/planadversity" class="btn btn-success btn-lg"><i class="fa fa-twitter fa-fw"></i> <span class="network-name">Twitter</span></a>
+                    </li>
+                    <li>
+                        <a href="//github.com/powellc/planadversity" class="btn btn-success btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name">Github</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+    {% endcomment %}
+
+    {% endblock body %}
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p>Copyright &copy; Code for Maine {% now "Y" %}</p>
+        </div>
+    </footer>
+
+    <!-- jQuery Version 1.11.0 -->
+    <script src="{% static "js/jquery-1.11.0.js" %}"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="{% static "js/jquery.easing.min.js" %}"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="{% static "js/grayscale.js" %}"></script>
+
+    <link href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" rel="stylesheet">
+    <script src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+
+
+    {% block extra_js %}{% endblock %}
+
+
+</body>
+
+</html>

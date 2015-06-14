@@ -1,0 +1,41 @@
+{% extends "meditations/base.html" %}
+
+{% load url from future %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block head_title %}{% trans "Response to" %}{{object.meditation}}{% endblock %}
+
+{% block content %}
+<div class="login-panel col-lg-12 col-lg-offset-0">
+    <h1>{% trans "Add Meditation Response" %}</h1>
+    
+    <div class="box">
+        {{form.non_field_errors}}
+        <form method="POST" action="{% url 'response-create' %}">{% csrf_token %}
+        {% if meditation %}
+        <h3>TO #{{meditation}}</h3>
+        {% else %}
+        <h3>To #{{form.meditation}}</h3>
+        {% endif %}
+        <form method="POST" action="{% url 'response-create' %}">{% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8 col-lg-offset-2">
+                <h2>Initial Response</h2>
+                <p><input width="20" name="initial_response" type="text" placeholder="Your emotional response" />
+            </div>
+            <div class="col-lg-8 col-lg-offset-2">
+                <p class="justify">Work through the best way to respond, adhering a close as possible to the stoic principals of detachment from what you cannot change, and changing what you can.</p>
+                <p><textarea name="notes" cols="50" rows="10"></textarea></p>
+                <p><input class="btn btn-success" type="submit" value="Save" />
+            </div>
+        </div>
+        <input type="hidden" name="meditation" value="{{meditation.slug}}" />
+        </form>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+

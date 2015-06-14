@@ -1,0 +1,24 @@
+{% extends "surveys/base.html" %}
+
+{% load url from future %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block head_title %}{% trans "Meditations" %}{% endblock %}
+
+{% block content %}
+<div class="login-panel col-lg-12 col-lg-offset-0">
+    <h1>{% trans "Survey List" %}</h1>
+    
+    <div class="col-lg-10 box">
+        <h3>Recent surveys</h3>
+        {% for object in object_list %}
+        <h3>{{object}}
+        <p class="small"><a href="{{object.get_absolute_url}}">permalink</a></p>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+

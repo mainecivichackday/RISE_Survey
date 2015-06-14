@@ -1,0 +1,30 @@
+{% extends "meditations/base.html" %}
+
+{% load url from future %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block head_title %}{% trans "Your Responses" %}{% endblock %}
+
+{% block content %}
+<div class="login-panel col-lg-12 col-lg-offset-0">
+    <h1>{% trans "Meditation Response" %}</h1>
+    
+    {% for response in object_list %}
+    <div class="box">
+        <h3>To #{{response.meditation}}</h3>
+        <p class="well small">{{response.meditation.text}}</p>
+        <br />
+        <h4>Initial Response</h4>
+        <p>{{response.initial_response}}</p>
+        <h4>Notes</h4>
+        <p>{{response.notes}}</p>
+        <p class="small"><a href="{{response.get_absolute_url}}">permalink</a></p>
+        <hr class="block" />
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+

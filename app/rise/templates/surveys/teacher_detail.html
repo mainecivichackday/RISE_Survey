@@ -1,0 +1,25 @@
+{% extends "surveys/base.html" %}
+
+{% load url from future %}
+{% load i18n %}
+{% load bootstrap %}
+
+{% block head_title %}{{object}}{% endblock %}
+
+{% block content %}
+<div class="login-panel col-lg-12 col-lg-offset-0">
+    <h1>{% trans "Teacher" %}</h1>
+    
+    <div class="box">
+        <h3>To #{{object}}</h3>
+        <h4>Initial Response</h4>
+        <p>{{object.initial_response}}</p>
+        <h4>Notes</h4>
+        <p>{{object.notes}}</p>
+        <hr class="block" />
+    </div>
+</div>
+
+{% endblock %}
+
+

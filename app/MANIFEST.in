@@ -1,0 +1,4 @@
+include README.md
+recursive-include rise/static *
+recursive-include rise/templates *
+recursive-include rise/apps *
