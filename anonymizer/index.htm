@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+
+    <title>Qualtrix Anonymizer</title>
+</head>
+<body>
+    <div class="container">
+        <div class="row" data-bind="template: { name: getViewName }">
+        </div>
+        <div class="row">
+        </div>
+    </div>
+    
+    <script type="text/html" id="input-view">
+        <div class="col-md-12">
+            <h3>Input CSV</h3>
+            <form>
+                <div class="form-group">
+                    <label for="pre-input">Pre (CSV)</label>
+                    <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="post-input">Post (CSV)</label>
+                    <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <button data-bind="click: parseInputs" class="btn btn-primary">Next »</button>
+                </div>
+            </form>
+        </div>
+    </script>
+    
+    <script type="text/html" id="fields-view">
+        <div class="col-md-12">
+            <h3>Choose Field Categories</h3>
+            <form class="form-horizontal">
+                <!-- ko foreach: fields -->
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">
+                      <span data-bind="text: fieldLabel"></span>&nbsp;[<span data-bind="text: fieldName"></span>]
+                  </label>
+                  <div class="col-md-3">
+                    <select data-bind="value: fieldCategory, options: $parent.fieldCategories" class="form-control"></select>
+                  </div>
+                </div>                    
+                <!-- /ko -->
+                <div class="form-group">
+                    <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+                    <button data-bind="click: selectFields" class="btn btn-primary">Next »</button>
+                </div>
+            </form>
+        </div>
+    </script>
+    
+    <script type="text/html" id="reconcile-view">
+        <div class="col-md-6">
+            <h3>Unmatched PRE Responses</h3>
+            <div data-bind="template: { name: 'unmatched-responses-table', data: unmatchedPreResponses }">
+            </div>
+         </div>
+         <div class="col-md-6">
+            <h3>Unmatched POST Responses</h3>
+            <div data-bind="template: { name: 'unmatched-responses-table', data: unmatchedPostResponses }">
+            </div>
+         </div>
+         <p>
+            <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+         </p>
+    </script>
+    
+    <script type="text/html" id="generate-view">
+        <div class="col-md-12">
+            <h3>Generate</h3>
+             <p>
+                <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+             </p>
+        </div>
+    </script>
+    
+    <script type="text/html" id="unmatched-responses-table">
+        <table class="table">
+            <thead>
+                <tr data-bind="foreach: $parent.identifierFields">
+                    <th data-bind="text: fieldLabel"></th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: $data, as: 'response'">
+                <tr data-bind="foreach: $parent.identifierFields, as: 'field'">
+                    <th data-bind="text: response[field.fieldIndex]"></th>
+                </tr>
+            </tbody>
+        </table>
+    </script>
+    
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
+    <script src="js/jquery.csv-0.71.min.js"></script>
+    <script type="text/javascript">
+        function ViewModel() {
+            var $this = this;
+
+            $this.views = ["input", "fields", "reconcile", "generate"];
+            $this.view = ko.observable("input");
+            
+            $this.getViewName = function(){
+                return $this.view() + "-view";
+            }
+
+            $this.gotoLastView = function() {
+                var ixView = $this.views.indexOf($this.view());
+                
+                if (ixView > 0) $this.view($this.views[ixView - 1]);
+            };
+            
+            $this.preInput = ko.observable();
+            $this.postInput = ko.observable();
+            $this.fields = ko.observableArray();
+            $this.fieldCategories = ["Response", "Ignore", "Identifier"];
+            $this.identifierFields = ko.computed(function(){
+                return $this.fields().filter(function(f){
+                    return f.fieldCategory() === "Identifier";
+                });
+            });
+            
+            $this.unmatchedPreResponses = ko.observableArray();
+            $this.unmatchedPostResponses = ko.observableArray();
+            
+            $this.parseInputs = function() {
+                var preDataArray = $.csv.toArrays($this.preInput());
+                var postDataArray = $.csv.toArrays($this.postInput());
+
+                var preFieldNames = preDataArray.shift();
+                var preFieldLabels = preDataArray.shift();
+
+                var postFieldNames = postDataArray.shift();
+                var postFieldLabels = postDataArray.shift();
+
+                var fieldModels = [];
+
+                for (var i = preFieldNames.length - 1; i >= 0; i--) {
+                    var fieldViewModel = {
+                        fieldIndex: i,
+                        fieldName: preFieldNames[i],
+                        fieldLabel: preFieldLabels[i],
+                        fieldCategory: ko.observable()
+                    };
+
+                    fieldModels.push(fieldViewModel);
+                };
+
+                fieldModels.reverse();
+
+                $this.fields(fieldModels);
+                
+                $this.preResponses = preDataArray;
+                $this.postResponses = postDataArray;
+
+                $this.view("fields");
+                
+                return false;
+            };
+
+            $this.selectFields = function() {
+                var idIndices = $this.fields()
+                    .filter(function (f) { return f.fieldCategory() === "Identifier"; })
+                    .map(function(f) { return f.fieldIndex; });
+                    
+                var unmatchedPre = $this.preResponses.filter(function(pre){
+                    return !$this.postResponses.some(function(post){
+                        return rowsMatchById(pre, post, idIndices);
+                    });
+                });
+                    
+                var unmatchedPost = $this.postResponses.filter(function(post){
+                    return !$this.preResponses.some(function(pre){
+                        return rowsMatchById(pre, post, idIndices);
+                    });
+                });
+                
+                $this.unmatchedPreResponses(unmatchedPre);
+                $this.unmatchedPostResponses(unmatchedPost);
+
+                $this.view("reconcile");
+                
+                return false;
+            };
+        }
+
+        $(function(){
+            var viewModel = new ViewModel();
+
+            ko.applyBindings(viewModel);
+        });
+        
+        function rowsMatchById(firstRow, secondRow, idIndices) {
+            var isMatching = true;
+            
+            idIndices.forEach(function(ix){
+                if (firstRow[ix].toLowerCase() !== secondRow[ix].toLowerCase())
+                {
+                    isMatching = false;
+                }
+            });
+            
+            return isMatching;
+        }
+    </script>
+</body>
+
+</html>
