@@ -56,7 +56,7 @@
                 <!-- /ko -->
                 <div class="form-group">
                     <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
-                    <button data-bind="click: selectFields" class="btn btn-primary">Next »</button>
+                    <button data-bind="click: reconcile" class="btn btn-primary">Next »</button>
                 </div>
             </form>
         </div>
@@ -75,6 +75,7 @@
          </div>
          <p>
             <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+            <button data-bind="click: reconcile" class="btn btn-primary">Retry</button>
          </p>
     </script>
     
@@ -94,9 +95,11 @@
                     <th data-bind="text: fieldLabel"></th>
                 </tr>
             </thead>
-            <tbody data-bind="foreach: $data, as: 'response'">
-                <tr data-bind="foreach: $parent.identifierFields, as: 'field'">
-                    <th data-bind="text: response[field.fieldIndex]"></th>
+            <tbody data-bind="foreach: { data: $data, as: 'response' }">
+                <tr data-bind="foreach: { data: $parents[1].identifierFields, as: 'field' }">
+                    <td>
+                        <input type="text" data-bind="value: response[field.fieldIndex]" />
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -162,6 +165,10 @@
                 fieldModels.reverse();
 
                 $this.fields(fieldModels);
+
+                
+                observifyResponses(preDataArray);
+                observifyResponses(postDataArray);
                 
                 $this.preResponses = preDataArray;
                 $this.postResponses = postDataArray;
@@ -171,7 +178,7 @@
                 return false;
             };
 
-            $this.selectFields = function() {
+            $this.reconcile = function() {
                 var idIndices = $this.fields()
                     .filter(function (f) { return f.fieldCategory() === "Identifier"; })
                     .map(function(f) { return f.fieldIndex; });
@@ -207,13 +214,21 @@
             var isMatching = true;
             
             idIndices.forEach(function(ix){
-                if (firstRow[ix].toLowerCase() !== secondRow[ix].toLowerCase())
+                if (firstRow[ix]().toLowerCase() !== secondRow[ix]().toLowerCase())
                 {
                     isMatching = false;
                 }
             });
             
             return isMatching;
+        }
+        
+        function observifyResponses(responseArray) {
+            for (var i = responseArray.length - 1; i >= 0; i--) {
+                for (var j = responseArray[i].length - 1; j >= 0; j--) {
+                    responseArray[i][j] = ko.observable(responseArray[i][j]);
+                }
+            };
         }
     </script>
 </body>
