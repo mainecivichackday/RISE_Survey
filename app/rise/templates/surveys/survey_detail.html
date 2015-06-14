@@ -21,7 +21,19 @@ $(document).ready(function(){
     
     {% if report %}
         <h3>Report</h3>
-        {{response_ids}}
+        <table id="surveyTable">
+            <thead><th>Question</th><th>Answer</th></thead>
+            {% for question, answer in results %}
+            <tr><td>{{question}}</td><td>{{answer}}</td></tr>
+            {% endfor %}
+        </table>
+        {% comment %}
+        Available to use are the following variables:
+        results = {'Q1': "70%", 'Q2': '65%'}
+        common_correct'] = ['Q1', 'Q8']
+        context['common_wrong'] = ['Q2']
+        context['report'] = True
+        {% endcomment %}
 
     {% else %}
     <div class="box">
