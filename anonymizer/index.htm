@@ -15,65 +15,92 @@
 </head>
 <body>
     <div class="container">
-        <div class="row">
-            <div class="col-md-12">
-                <h3>Input CSV</h3>
-                <form>
-                    <div class="form-group">
-                        <label for="pre-input">Pre (CSV)</label>
-                        <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="post-input">Post (CSV)</label>
-                        <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <button data-bind="click: parseInputs" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
+        <div class="row" data-bind="template: { name: getViewName }">
         </div>
         <div class="row">
-            <div class="col-md-12">
-                <h3>Choose Field Categories</h3>
-                <form class="form-horizontal">
-                    <!-- ko foreach: fields -->
-                    <div class="form-group">
-                      <label class="col-sm-2 control-label">
-                          <span data-bind="text: fieldLabel"></span>&nbsp;[<span data-bind="text: fieldName"></span>]
-                      </label>
-                      <div class="col-md-3">
-                        <select data-bind="value: fieldCategory, options: $parent.fieldCategories" class="form-control"></select>
-                      </div>
-                    </div>                    
-                    <!-- /ko -->
-                    <div class="form-group">
-                        <button data-bind="click: selectFields" class="btn btn-primary">Submit</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6">
-                <h3>Unmatched PRE Responses</h3>
-                <table class="table">
-                    <thead>
-                        <tr data-bind="foreach: identifierFields">
-                            <th data-bind="text: fieldLabel"></th>
-                        </tr>
-                    </thead>
-                    <tbody data-bind="foreach: unmatchedPreResponses, as: 'response'">
-                        <tr data-bind="foreach: $parent.identifierFields, as: 'field'">
-                            <th data-bind="text: response[field.fieldIndex]"></th>
-                        </tr>
-                    </tbody>
-                </table>
-             </div>
-             <div class="col-md-6">
-                <h3>Unmatched POST Responses</h3>
-             </div>
         </div>
     </div>
+    
+    <script type="text/html" id="input-view">
+        <div class="col-md-12">
+            <h3>Input CSV</h3>
+            <form>
+                <div class="form-group">
+                    <label for="pre-input">Pre (CSV)</label>
+                    <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="post-input">Post (CSV)</label>
+                    <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
+                </div>
+                <div class="form-group">
+                    <button data-bind="click: parseInputs" class="btn btn-primary">Next »</button>
+                </div>
+            </form>
+        </div>
+    </script>
+    
+    <script type="text/html" id="fields-view">
+        <div class="col-md-12">
+            <h3>Choose Field Categories</h3>
+            <form class="form-horizontal">
+                <!-- ko foreach: fields -->
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">
+                      <span data-bind="text: fieldLabel"></span>&nbsp;[<span data-bind="text: fieldName"></span>]
+                  </label>
+                  <div class="col-md-3">
+                    <select data-bind="value: fieldCategory, options: $parent.fieldCategories" class="form-control"></select>
+                  </div>
+                </div>                    
+                <!-- /ko -->
+                <div class="form-group">
+                    <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+                    <button data-bind="click: selectFields" class="btn btn-primary">Next »</button>
+                </div>
+            </form>
+        </div>
+    </script>
+    
+    <script type="text/html" id="reconcile-view">
+        <div class="col-md-6">
+            <h3>Unmatched PRE Responses</h3>
+            <div data-bind="template: { name: 'unmatched-responses-table', data: unmatchedPreResponses }">
+            </div>
+         </div>
+         <div class="col-md-6">
+            <h3>Unmatched POST Responses</h3>
+            <div data-bind="template: { name: 'unmatched-responses-table', data: unmatchedPostResponses }">
+            </div>
+         </div>
+         <p>
+            <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+         </p>
+    </script>
+    
+    <script type="text/html" id="generate-view">
+        <div class="col-md-12">
+            <h3>Generate</h3>
+             <p>
+                <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+             </p>
+        </div>
+    </script>
+    
+    <script type="text/html" id="unmatched-responses-table">
+        <table class="table">
+            <thead>
+                <tr data-bind="foreach: $parent.identifierFields">
+                    <th data-bind="text: fieldLabel"></th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: $data, as: 'response'">
+                <tr data-bind="foreach: $parent.identifierFields, as: 'field'">
+                    <th data-bind="text: response[field.fieldIndex]"></th>
+                </tr>
+            </tbody>
+        </table>
+    </script>
     
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -83,6 +110,19 @@
         function ViewModel() {
             var $this = this;
 
+            $this.views = ["input", "fields", "reconcile", "generate"];
+            $this.view = ko.observable("input");
+            
+            $this.getViewName = function(){
+                return $this.view() + "-view";
+            }
+
+            $this.gotoLastView = function() {
+                var ixView = $this.views.indexOf($this.view());
+                
+                if (ixView > 0) $this.view($this.views[ixView - 1]);
+            };
+            
             $this.preInput = ko.observable();
             $this.postInput = ko.observable();
             $this.fields = ko.observableArray();
@@ -92,6 +132,9 @@
                     return f.fieldCategory() === "Identifier";
                 });
             });
+            
+            $this.unmatchedPreResponses = ko.observableArray();
+            $this.unmatchedPostResponses = ko.observableArray();
             
             $this.parseInputs = function() {
                 var preDataArray = $.csv.toArrays($this.preInput());
@@ -123,6 +166,8 @@
                 $this.preResponses = preDataArray;
                 $this.postResponses = postDataArray;
 
+                $this.view("fields");
+                
                 return false;
             };
 
@@ -142,6 +187,13 @@
                         return rowsMatchById(pre, post, idIndices);
                     });
                 });
+                
+                $this.unmatchedPreResponses(unmatchedPre);
+                $this.unmatchedPostResponses(unmatchedPost);
+
+                $this.view("reconcile");
+                
+                return false;
             };
         }
 
