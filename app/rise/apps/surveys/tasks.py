@@ -13,14 +13,23 @@ app = Celery('tasks', broker='redis://localhost//', backend='redis://localhost')
 def import_csv_data(survey, survey_fields, field_response, mode="pre"):
     if mode == 'pre':
         path = survey.pre_file.path
+        csv = survey.pre_csv
         pre = True
         post = False
     else:
         path = survey.post_file.path
+        csv = survey.post_csv
         pre = False
         post = True
+
+    if path:
+        stream = open(path, 'rU')
+    else:
+        stream = csv
+
     logger.debug('Importing data from {0}'.format(path))
-    data = [row for row in csv.reader(open(path, 'rU'))]
+
+    data = [row for row in csv.reader(stream)]
     # throw away the first two headers
     ids = data.pop(0)
     names = data.pop(0)

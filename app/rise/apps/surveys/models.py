@@ -29,6 +29,8 @@ class Survey(TimeStampedModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     pre_file = models.FileField(upload_to='csv', blank=True, null=True)
     post_file = models.FileField(upload_to='csv', blank=True, null=True)
+    pre_csv = models.TextField(blank=True, null=True)
+    post_csv = models.TextField(blank=True, null=True)
     answer_key = models.TextField(blank=True, null=True,
                                   help_text="Answer question number and correct answer on separate lines")
     pre_task_id = models.CharField(blank=True, null=True, max_length=255)
@@ -61,9 +63,9 @@ class Survey(TimeStampedModel):
     def save(self, *args, **kwargs):
         super(Survey, self).save(*args, **kwargs)
 
-        if self.pre_file:
+        if self.pre_file or self.pre_csv:
             self.pre_task_id = import_csv_data.delay(self, SurveyField, FieldResponse, mode="pre").task_id
-        if self.post_file:
+        if self.post_file or self.post_csv:
             self.post_task_id = import_csv_data.delay(self, SurveyField, FieldResponse, mode="post").task_id
 
         super(Survey, self).save()
