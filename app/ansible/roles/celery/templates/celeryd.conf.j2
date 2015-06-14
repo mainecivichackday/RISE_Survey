@@ -11,4 +11,4 @@ env DJANGO_SECRET_KEY="{{secret_key}}"
 env DATABASE_URL="postgres://{{deployment_name}}:{{dbpass}}@localhost/{{deployment_name}}_{{mode}}"
 env DJANGO_CONFIGURATION="{{mode}}"
 
-exec /home/{{deployment_name}}/{{mode}}/venv/bin/python /home/{{ deployment_name }}/{{mode}}/app/manage.py celery --loglevel=INFO
+exec su -s /bin/sh -c 'exec "$0" "$@"' {{deployment_name}} -- /home/{{deployment_name}}/{{mode}}/app/venv/bin/python /home/{{ deployment_name }}/{{mode}}/app/manage.py celery worker --loglevel=INFO

@@ -6,6 +6,6 @@
       - celery
 
   - name: restart celery
-    service: name=celer_{{deployment_name}}_{{mode}} state=restarted
+    service: name=celery_{{deployment_name}}_{{mode}} state=restarted
     sudo_user: root
     when: celery_install.changed
