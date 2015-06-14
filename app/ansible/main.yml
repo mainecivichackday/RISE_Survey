@@ -8,6 +8,7 @@
     - role: postgresql
     - role: nginx
     - role: django
+    - role: celery
 
   tasks:
     - include: roles/django/tasks/deploy.yml

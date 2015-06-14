@@ -45,6 +45,7 @@
       - libxslt1-dev
       - libjpeg-dev
       - python-dev
+      - redis-server
 
   - name: Create ssl group.
     group: name=ssl state=present
