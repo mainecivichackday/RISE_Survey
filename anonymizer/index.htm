@@ -25,10 +25,12 @@
         <div class="col-md-12">
             <h3>Input CSV</h3>
             <form>
+                <input type="file" id="fileinput_PRE" data-bind="event: { change: handleFileChangePRE}"/>
                 <div class="form-group">
                     <label for="pre-input">Pre (CSV)</label>
                     <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
                 </div>
+                <input type="file" id="fileinput_POST" data-bind="event: { change: handleFileChangePOST}"/>
                 <div class="form-group">
                     <label for="post-input">Post (CSV)</label>
                     <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
@@ -56,7 +58,7 @@
                 <!-- /ko -->
                 <div class="form-group">
                     <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
-                    <button data-bind="click: selectFields" class="btn btn-primary">Next »</button>
+                    <button data-bind="click: reconcile" class="btn btn-primary">Next »</button>
                 </div>
             </form>
         </div>
@@ -75,6 +77,7 @@
          </div>
          <p>
             <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+            <button data-bind="click: reconcile" class="btn btn-primary">Retry</button>
          </p>
     </script>
     
@@ -94,9 +97,11 @@
                     <th data-bind="text: fieldLabel"></th>
                 </tr>
             </thead>
-            <tbody data-bind="foreach: $data, as: 'response'">
-                <tr data-bind="foreach: $parent.identifierFields, as: 'field'">
-                    <th data-bind="text: response[field.fieldIndex]"></th>
+            <tbody data-bind="foreach: { data: $data, as: 'response' }">
+                <tr data-bind="foreach: { data: $parents[1].identifierFields, as: 'field' }">
+                    <td>
+                        <input type="text" data-bind="value: response[field.fieldIndex]" />
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -106,6 +111,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
     <script src="js/jquery.csv-0.71.min.js"></script>
+    
     <script type="text/javascript">
         function ViewModel() {
             var $this = this;
@@ -123,6 +129,16 @@
                 if (ixView > 0) $this.view($this.views[ixView - 1]);
             };
             
+            $this.handleFileChangePRE = function(view,evt){
+                console.log("File changed: PRE");
+                readSingleFile(view,evt,$this.preInput);
+            };
+            
+            $this.handleFileChangePOST = function(view,evt){
+                console.log("File changed: POST");
+                readSingleFile(view,evt,$this.postInput);
+            };
+
             $this.preInput = ko.observable();
             $this.postInput = ko.observable();
             $this.fields = ko.observableArray();
@@ -162,6 +178,10 @@
                 fieldModels.reverse();
 
                 $this.fields(fieldModels);
+
+                
+                observifyResponses(preDataArray);
+                observifyResponses(postDataArray);
                 
                 $this.preResponses = preDataArray;
                 $this.postResponses = postDataArray;
@@ -171,7 +191,7 @@
                 return false;
             };
 
-            $this.selectFields = function() {
+            $this.reconcile = function() {
                 var idIndices = $this.fields()
                     .filter(function (f) { return f.fieldCategory() === "Identifier"; })
                     .map(function(f) { return f.fieldIndex; });
@@ -207,13 +227,47 @@
             var isMatching = true;
             
             idIndices.forEach(function(ix){
-                if (firstRow[ix].toLowerCase() !== secondRow[ix].toLowerCase())
+                if (firstRow[ix]().toLowerCase() !== secondRow[ix]().toLowerCase())
                 {
                     isMatching = false;
                 }
             });
             
             return isMatching;
+        }
+        
+        function observifyResponses(responseArray) {
+            for (var i = responseArray.length - 1; i >= 0; i--) {
+                for (var j = responseArray[i].length - 1; j >= 0; j--) {
+                    responseArray[i][j] = ko.observable(responseArray[i][j]);
+                }
+            };
+        }
+
+        function readSingleFile(view,evt,callback) {
+          //Retrieve the first (and only!) File from the FileList object
+          var f = evt.target.files[0]; 
+          var inType = evt.target.id.split("_")[1].toLowerCase();
+          var myView = view;
+
+          if (f) {
+            var r = new FileReader();
+            r.onload = function(e) { 
+              var contents = e.target.result;
+              //$("#"+inType+"-input").val(contents);
+              callback(contents);
+
+              console.log( "Got the file.\n" 
+                    +"name: " + f.name + "\n"
+                    +"type: " + f.type + "\n"
+                    +"size: " + f.size + " bytes\n"
+                    + "starts with: " + contents.substr(1, contents.indexOf("\n"))
+              );  
+            }
+            r.readAsText(f);
+          } else { 
+            alert("Failed to load file");
+          }
         }
     </script>
 </body>
