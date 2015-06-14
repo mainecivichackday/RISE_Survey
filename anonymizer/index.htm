@@ -25,10 +25,12 @@
         <div class="col-md-12">
             <h3>Input CSV</h3>
             <form>
+                <input type="file" id="fileinput_PRE" data-bind="event: { change: handleFileChangePRE}"/>
                 <div class="form-group">
                     <label for="pre-input">Pre (CSV)</label>
                     <textarea id="pre-input" data-bind="value: preInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
                 </div>
+                <input type="file" id="fileinput_POST" data-bind="event: { change: handleFileChangePOST}"/>
                 <div class="form-group">
                     <label for="post-input">Post (CSV)</label>
                     <textarea id="post-input" data-bind="value: postInput" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
@@ -55,7 +57,7 @@
                 </div>                    
                 <!-- /ko -->
                 <div class="form-group">
-                    <button data-bind="click: gotoLastView" class="btn">« Back</button>
+                    <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
                     <button data-bind="click: reconcile" class="btn btn-primary">Next »</button>
                 </div>
             </form>
@@ -74,47 +76,17 @@
             </div>
          </div>
          <p>
-            <button data-bind="click: gotoLastView" class="btn">« Back</button>
-            <button data-bind="click: reconcile" class="btn btn-success">Retry</button>
-            <button data-bind="click: generate" class="btn btn-primary">Generate Output</button>
+            <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+            <button data-bind="click: reconcile" class="btn btn-primary">Retry</button>
          </p>
     </script>
     
     <script type="text/html" id="generate-view">
         <div class="col-md-12">
-            <h3>Results</h3>
-            <form>
-                <fieldset>
-                    <legend>Correlated PRE Responses</legend>
-                    <div class="form-group">
-                        <textarea data-bind="text: correlatedPreResponseData" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                </fieldset>
-            </form>
-            <form>
-                <fieldset>
-                    <legend>Correlated POST Responses</legend>
-                    <div class="form-group">
-                        <textarea data-bind="text: correlatedPostResponseData" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                </fieldset>
-            </form>
-            <form>
-                <fieldset>
-                    <legend>Anonymized PRE Responses</legend>
-                    <div class="form-group">
-                        <textarea data-bind="text: anonymizedPreResponseData" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                </fieldset>
-            </form>
-            <form>
-                <fieldset>
-                    <legend>Anonymized POST Responses</legend>
-                    <div class="form-group">
-                        <textarea data-bind="text: anonymizedPostResponseData" rows="10" cols="40" class="form-control" style="white-space: inherit;"></textarea>
-                    </div>
-                </fieldset>
-            </form>
+            <h3>Generate</h3>
+             <p>
+                <button data-bind="click: gotoLastView" class="btn btn-primary">« Back</button>
+             </p>
         </div>
     </script>
     
@@ -139,6 +111,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
     <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
     <script src="js/jquery.csv-0.71.min.js"></script>
+    
     <script type="text/javascript">
         function ViewModel() {
             var $this = this;
@@ -156,6 +129,16 @@
                 if (ixView > 0) $this.view($this.views[ixView - 1]);
             };
             
+            $this.handleFileChangePRE = function(view,evt){
+                console.log("File changed: PRE");
+                readSingleFile(view,evt,$this.preInput);
+            };
+            
+            $this.handleFileChangePOST = function(view,evt){
+                console.log("File changed: POST");
+                readSingleFile(view,evt,$this.postInput);
+            };
+
             $this.preInput = ko.observable();
             $this.postInput = ko.observable();
             $this.fields = ko.observableArray();
@@ -232,37 +215,6 @@
                 
                 return false;
             };
-            
-            this.generate = function(){
-
-                var idIndices = $this.fields()
-                    .filter(function (f) { return f.fieldCategory() === "Identifier"; })
-                    .map(function(f) { return f.fieldIndex; });
-                
-                var ixResponseId = $this.fields()
-                    .filter(function(f) { return f.fieldLabel === "ResponseID"; })
-                    .map(function(f) { return f.fieldIndex; })[0];
-                    
-                // Correlate the pre/post responses by ID fields
-                $this.postResponses.forEach(function(post){
-                    
-                    var matchedPreResponse = $this.preResponses.filter(function(pre) { return rowsMatchById(pre, post, idIndices); });
-                    
-                    if (matchedPreResponse)
-                    {
-                        post[ixResponseId] = matchedPreResponse[0][ixResponseId];
-                    }
-                });
-                
-                var fieldsArray = $this.fields();
-                
-                $this.correlatedPreResponseData = generateCSVFromResponse($this.preResponses, fieldsArray, null);
-                $this.correlatedPostResponseData = generateCSVFromResponse($this.postResponses, fieldsArray, null);
-                $this.anonymizedPreResponseData = generateCSVFromResponse($this.preResponses, fieldsArray, idIndices);
-                $this.anonymizedPostResponseData = generateCSVFromResponse($this.postResponses, fieldsArray, idIndices);
-                
-                $this.view("generate");
-            };
         }
 
         $(function(){
@@ -291,45 +243,31 @@
                 }
             };
         }
-        
-        function generateCSVFromResponse(responseArray, fields, idIndices)
-        {
-            var csvFieldNamesLine = "";
-            var csvFieldLabelsLine = "";
-            
-            fields.forEach(function(field) {
-                csvFieldNamesLine += field.fieldName + ",";
-                csvFieldLabelsLine += field.fieldLabel + ",";                
-            });
 
-            var csv = csvFieldNamesLine.slice(0,-1) + "\n" + csvFieldLabelsLine.slice(0,-1) + "\n";            
-            
-            responseArray.forEach(function(response){
-            
-                var dataLine = "";
-                
-                fields.forEach(function(field) {
-                    
-                    if (isIdIndex(field.fieldIndex, idIndices))
-                    {
-                        dataLine += ","
-                    }
-                    else
-                    {
-                        dataLine += response[field.fieldIndex]() + ",";
-                    }
-                });
-                    
-                csv += dataLine.slice(0,-1) + "\n";
-                
-            });
-            
-            return csv;
-        }
-        
-        function isIdIndex(ix, idIndices)
-        {
-            return (idIndices && (idIndices.indexOf(ix) > -1))
+        function readSingleFile(view,evt,callback) {
+          //Retrieve the first (and only!) File from the FileList object
+          var f = evt.target.files[0]; 
+          var inType = evt.target.id.split("_")[1].toLowerCase();
+          var myView = view;
+
+          if (f) {
+            var r = new FileReader();
+            r.onload = function(e) { 
+              var contents = e.target.result;
+              //$("#"+inType+"-input").val(contents);
+              callback(contents);
+
+              console.log( "Got the file.\n" 
+                    +"name: " + f.name + "\n"
+                    +"type: " + f.type + "\n"
+                    +"size: " + f.size + " bytes\n"
+                    + "starts with: " + contents.substr(1, contents.indexOf("\n"))
+              );  
+            }
+            r.readAsText(f);
+          } else { 
+            alert("Failed to load file");
+          }
         }
     </script>
 </body>
