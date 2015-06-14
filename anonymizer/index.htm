@@ -124,12 +124,12 @@
     <script type="text/html" id="unmatched-responses-table">
         <table class="table">
             <thead>
-                <tr data-bind="foreach: $parent.identifierFields">
+                <tr data-bind="foreach: $parent.keyFields">
                     <th data-bind="text: fieldLabel"></th>
                 </tr>
             </thead>
             <tbody data-bind="foreach: { data: $data, as: 'response' }">
-                <tr data-bind="foreach: { data: $parents[1].identifierFields, as: 'field' }">
+                <tr data-bind="foreach: { data: $parents[1].keyFields, as: 'field' }">
                     <td>
                         <input type="text" data-bind="value: response[field.fieldIndex]" />
                     </td>
@@ -170,10 +170,19 @@
             $this.preInput = ko.observable();
             $this.postInput = ko.observable();
             $this.fields = ko.observableArray();
-            $this.fieldCategories = ["Response", "Ignore", "Identifier"];
-            $this.identifierFields = ko.computed(function(){
+            $this.fieldCategories = ["Include", "Exclude", "Key", "ExcludedKey"];
+            
+            $this.keyFields = ko.computed(function(){
                 return $this.fields().filter(function(f){
-                    return f.fieldCategory() === "Identifier";
+                    var cat = f.fieldCategory();
+                    return cat === "Key" || cat === "ExcludedKey";
+                });
+            });
+            
+            $this.ignoredFields = ko.computed(function(){
+                return $this.fields().filter(function(f){
+                    var cat = f.fieldCategory();
+                    return cat === "Exclude" || cat === "ExcludedKey";
                 });
             });
             
@@ -210,8 +219,7 @@
                 return false;
             };
             $this.reconcile = function() {
-                var idIndices = $this.fields()
-                    .filter(function (f) { return f.fieldCategory() === "Identifier"; })
+                var idIndices = $this.keyFields()
                     .map(function(f) { return f.fieldIndex; });
                     
                 var unmatchedPre = $this.preResponses.filter(function(pre){
@@ -234,8 +242,7 @@
             };
             
             this.generate = function(){
-                var idIndices = $this.fields()
-                    .filter(function (f) { return f.fieldCategory() === "Identifier"; })
+                var idIndices = $this.keyFields()
                     .map(function(f) { return f.fieldIndex; });
                 
                 var ixResponseId = $this.fields()
@@ -247,18 +254,21 @@
                     
                     var matchedPreResponse = $this.preResponses.filter(function(pre) { return rowsMatchById(pre, post, idIndices); });
                     
-                    if (matchedPreResponse)
+                    if (matchedPreResponse && matchedPreResponse.length > 0)
                     {
                         post[ixResponseId] = matchedPreResponse[0][ixResponseId];
                     }
                 });
                 
                 var fieldsArray = $this.fields();
+
+                var excludedIndices = $this.ignoredFields()
+                    .map(function(f) { return f.fieldIndex; });
                 
                 $this.correlatedPreResponseData = generateCSVFromResponse($this.preResponses, fieldsArray, null);
                 $this.correlatedPostResponseData = generateCSVFromResponse($this.postResponses, fieldsArray, null);
-                $this.anonymizedPreResponseData = generateCSVFromResponse($this.preResponses, fieldsArray, idIndices);
-                $this.anonymizedPostResponseData = generateCSVFromResponse($this.postResponses, fieldsArray, idIndices);
+                $this.anonymizedPreResponseData = generateCSVFromResponse($this.preResponses, fieldsArray, excludedIndices);
+                $this.anonymizedPostResponseData = generateCSVFromResponse($this.postResponses, fieldsArray, excludedIndices);
                 
                 $this.view("generate");
             };
@@ -289,14 +299,17 @@
             };
         }
         
-        function generateCSVFromResponse(responseArray, fields, idIndices)
+        function generateCSVFromResponse(responseArray, fields, excludedIndices)
         {
             var csvFieldNamesLine = "";
             var csvFieldLabelsLine = "";
             
             fields.forEach(function(field) {
-                csvFieldNamesLine += field.fieldName + ",";
-                csvFieldLabelsLine += field.fieldLabel + ",";                
+                if (!safeIndexOf(excludedIndices, field.fieldIndex))
+                {
+                    csvFieldNamesLine += escapeCSVField(field.fieldName) + ",";
+                    csvFieldLabelsLine += escapeCSVField(field.fieldLabel) + ",";
+                }
             });
             var csv = csvFieldNamesLine.slice(0,-1) + "\n" + csvFieldLabelsLine.slice(0,-1) + "\n";            
             
@@ -306,13 +319,9 @@
                 
                 fields.forEach(function(field) {
                     
-                    if (isIdIndex(field.fieldIndex, idIndices))
+                    if (!safeIndexOf(excludedIndices, field.fieldIndex))
                     {
-                        dataLine += ","
-                    }
-                    else
-                    {
-                        dataLine += response[field.fieldIndex]() + ",";
+                        dataLine += escapeCSVField(response[field.fieldIndex]()) + ",";
                     }
                 });
                     
@@ -323,9 +332,19 @@
             return csv;
         }
         
-        function isIdIndex(ix, idIndices)
+        function safeIndexOf(array, element)
         {
-            return (idIndices && (idIndices.indexOf(ix) > -1))
+            return (array && (array.indexOf(element) > -1))
+        }
+        
+        function escapeCSVField(value)
+        {
+            if (value.indexOf(",") > -1)
+            {
+                return "\"" + value.replace("\"", "\"\"") + "\"";
+            }
+            
+            return value;
         }
 
         function readSingleFile(view,evt,callback) {
