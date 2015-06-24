@@ -18,7 +18,7 @@ $(document).ready(function(){
 {% block content %}
 <div class="login-panel col-lg-12 col-lg-offset-0">
     <h1>{{object}}</h1>
-    
+
     {% if report %}
         <h3>Report</h3>
         <table id="surveyTable">
@@ -38,15 +38,28 @@ $(document).ready(function(){
     {% else %}
     <div class="box">
         <h3>Results</h3>
-        <p>Entries: {{response_ids|length}}</p>
-        {% if pre_task == "PENDING" or post_task == "PENDING" %}<p>Still loading entries. Please refresh the page in a few minutes.</p>{% endif %}
-        <a href="{% url 'survey-report' object.slug %}" class="btn btn-info">View Report</a>
-
+        <p>Entries: {{response_ids|length}}&nbsp;&nbsp;&nbsp;{% if pre_task == "PENDING" or post_task == "PENDING" %}<img src="{% static 'img/spinner.gif' %}" />Still loading entries. Please refresh the page in a few minutes.</p>{% endif %}
     </div>
-    <br />
     <div class="box">
-      <a href="" class="btn btn-success">Download CSV</a>
+        <a onclick="javascript:$('#questions').slideToggle()" class="btn btn-info">Questions</a>&nbsp;<a onclick="javascript:$('#answers').slideToggle()" class="btn btn-info">Answer Key</a>&nbsp;<a href="{% url 'survey-report' object.slug %}" class="btn btn-info">View Report</a>&nbsp;<a href="" class="btn btn-success">Download CSV</a>
     </div>
+
+    {% if object.questions %}
+    <div class="box" id="questions" style="display:none;">
+          {% for q in object.questions %}
+          <p>{{q}}</p>
+          {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if object.answers %}
+    <div class="box" id="answers" style="display:none;">
+          {% for q in object.answers%}
+          <p>{{q}}</p>
+          {% endfor %}
+    </div>
+    {% endif %}
+
     {% endif %}
 </div>
 

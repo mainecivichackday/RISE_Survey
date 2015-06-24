@@ -52,13 +52,49 @@ class Survey(TimeStampedModel):
                 q, a = key.split('=')
                 answers[int(q)] = int(a)
             return answers
-        return None
+        return {}
 
     @property
-    def response(self, response_id, question):
-        # Given a question number and a respondent, grabs the response from fieldresponses
-        responses = FieldResponse.objects.filter(survey_field__survey=self)
-        return None
+    def questions(self):
+        ''' Returns a list of SurveyField instances which are
+            the questions in the Pre Survey Responses '''
+        qlist = []
+        # Use the answer key to dig questions out of the field responses
+        for question_number in self.answers.keys():
+            result = self.surveyfield_set.filter(qualtrics_id='Q'+str(question_number))
+            if len(result) > 0:
+                qlist.append(result[0])
+        return qlist
+
+    def question_responses(self, respondant_id=False, pre=False, post=False):
+        ''' 
+        Given a respondant id, returns all the question answers by that respondants
+        for the given state. By default we return the Pre state
+        '''
+        respondant_answers = {}
+
+        if respondant_id:
+            filters = Q(respone_id=respondant_id)
+        else:
+            filters = Q()
+        for q in self.questions:
+            responses = q.fieldresponse_set.filter(filters,
+                                                   is_pre=pre, 
+                                                   is_post=post)
+            if len(responses) > 0:
+                respondant_answers[int(q.qualtrics_id.replace('Q', ''))] = responses[0].response
+        return respondant_answers
+
+
+    @property
+    def pre_responses(self, q=None):
+        return FieldResponse.objects.filter(survey_field__in=self.questions,
+                                            is_pre=True)
+
+    @property
+    def post_responses(self):
+        return FieldResponse.objects.filter(survey_field__in=self.questions,
+                                            is_post=True)
 
     def save(self, *args, **kwargs):
         super(Survey, self).save(*args, **kwargs)
