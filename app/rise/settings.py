@@ -86,6 +86,8 @@ class Common(Configuration):
         "django.contrib.staticfiles.finders.AppDirectoriesFinder",
     )
 
+    STATICFILES_STORAGE = 'whitenoise.django.GzipManifestStaticFilesStorage'
+
     ACCOUNT_AUTHENTICATION_METHOD = "email"
     ACCOUNT_USER_MODEL_USERNAME_FIELD = None
     ACCOUNT_EMAIL_REQUIRED = True

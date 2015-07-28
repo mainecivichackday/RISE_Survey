@@ -1,0 +1,9 @@
+*.pyc
+public
+dist
+.vagrant
+components
+db.sqlite3
+docker/venv
+build
+venv
