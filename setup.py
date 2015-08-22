@@ -6,7 +6,7 @@ version = __import__('rise').__version__
 
 install_requires = [
     'setuptools==18.0.1',
-    'Django==1.8.3',
+    'Django==1.8.4',
     'django_configurations==0.9-sbrandtb',
     'dj-database-url==0.3.0',
     'pylibmc==1.3.0',
