@@ -32,7 +32,8 @@ class Survey(TimeStampedModel):
     pre_csv = models.TextField(blank=True, null=True)
     post_csv = models.TextField(blank=True, null=True)
     answer_key = models.TextField(blank=True, null=True,
-                                  help_text="Answer question number and correct answer on separate lines")
+                                  help_text="Answer question number and correct\
+                                             answer on separate lines")
     pre_task_id = models.CharField(blank=True, null=True, max_length=255)
     post_task_id = models.CharField(blank=True, null=True, max_length=255)
 
@@ -49,7 +50,7 @@ class Survey(TimeStampedModel):
             keys = self.answer_key.split('\r\n')
             answers = {}
             for key in keys:
-                q, a = key.split('=')
+                if key: q, a = key.split('=')
                 answers[int(q)] = int(a)
             return answers
         return {}
@@ -67,7 +68,7 @@ class Survey(TimeStampedModel):
         return qlist
 
     def question_responses(self, respondant_id=False, pre=False, post=False):
-        ''' 
+        '''
         Given a respondant id, returns all the question answers by that respondants
         for the given state. By default we return the Pre state
         '''
@@ -79,7 +80,7 @@ class Survey(TimeStampedModel):
             filters = Q()
         for q in self.questions:
             responses = q.fieldresponse_set.filter(filters,
-                                                   is_pre=pre, 
+                                                   is_pre=pre,
                                                    is_post=post)
             if len(responses) > 0:
                 respondant_answers[int(q.qualtrics_id.replace('Q', ''))] = responses[0].response

@@ -21,13 +21,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='survey',
             name='slug',
-            field=django_extensions.db.fields.AutoSlugField(allow_duplicates=b'"\'False\'"', separator=b'\'"u\\\'-\\\'"\'', blank=True, populate_from=b'\'"\\\'name\\\'"\'', editable=False, overwrite=b'"\'False\'"'),
+            field=django_extensions.db.fields.AutoSlugField(allow_duplicates=False, separator=b'\'"u\\\'-\\\'"\'', blank=True, populate_from=b'\'"\\\'name\\\'"\'', editable=False, overwrite=False),
             preserve_default=True,
         ),
         migrations.AlterField(
             model_name='teacher',
             name='slug',
-            field=django_extensions.db.fields.AutoSlugField(allow_duplicates=b'"\'False\'"', separator=b'\'"u\\\'-\\\'"\'', blank=True, populate_from=b'\'"\\\'name\\\'"\'', editable=False, overwrite=b'"\'False\'"'),
+            field=django_extensions.db.fields.AutoSlugField(allow_duplicates=False, separator=b'\'"u\\\'-\\\'"\'', blank=True, populate_from=b'\'"\\\'name\\\'"\'', editable=False, overwrite=False),
             preserve_default=True,
         ),
     ]

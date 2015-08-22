@@ -42,7 +42,6 @@ def import_csv_data(survey, survey_fields, field_response, mode="pre"):
             except IndexError:
                 pass
             if text and qid:
-                print str(qid)
                 field, _created = survey_fields.objects.get_or_create(survey=survey,
                                                                     text=text,
                                                                     qualtrics_id=str(qid))

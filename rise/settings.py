@@ -42,7 +42,6 @@ class Common(Configuration):
 
     INSTALLED_APPS = (
         "django.contrib.admin",
-        "django.contrib.comments",
         "django.contrib.auth",
         "django.contrib.contenttypes",
         "django.contrib.redirects",
@@ -68,9 +67,7 @@ class Common(Configuration):
 
     TEMPLATE_CONTEXT_PROCESSORS = Configuration.TEMPLATE_CONTEXT_PROCESSORS + \
         ("django.core.context_processors.request",
-         "django.core.context_processors.tz",
-         "allauth.account.context_processors.account",
-         "allauth.socialaccount.context_processors.socialaccount",)
+         "django.core.context_processors.tz",)
 
     MIDDLEWARE_CLASSES = (
         "django.contrib.sessions.middleware.SessionMiddleware",
@@ -206,9 +203,6 @@ class Dev(Common):
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
     INSTALLED_APPS = Common.INSTALLED_APPS + ('debug_toolbar',)
-
-    MIDDLEWARE_CLASSES = Common.MIDDLEWARE_CLASSES + (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',)
 
 
 class Stage(Common):
